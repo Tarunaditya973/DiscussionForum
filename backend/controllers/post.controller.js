@@ -58,11 +58,9 @@ const deletePost = async (req, res) => {
 
 const commentOnPost = async (req, res) => {
   try {
-    const { postId } = req.query;
-    const { content } = req.body;
+    const { content, postId } = req.body;
     const author = req.user.user._id;
-    console.log("postId", postId);
-    console.log("content", content);
+
     if (!postId || !content || !author) {
       return res.status(400).json({ error: "Missing required fields" });
     }
@@ -85,8 +83,7 @@ const commentOnPost = async (req, res) => {
 
 const replyComment = async (req, res) => {
   try {
-    const { commentId } = req.query;
-    const { content, authorId } = req.body;
+    const { content, authorId, commentId } = req.body;
     const parentComment = await Comment.findById(commentId);
 
     if (!parentComment) {
@@ -122,7 +119,7 @@ const getAllauthors = async (req, res) => {
 
 const fetchPosts = async (req, res) => {
   try {
-    const { threadId, author } = req.query;
+    const { threadId } = req.query;
 
     // Find posts by threadId
     const posts = await Post.find({ thread: threadId }).populate(
@@ -130,12 +127,7 @@ const fetchPosts = async (req, res) => {
       "username"
     );
 
-    // If author is provided and not an empty string, filter posts by author
-    const filteredPosts = author
-      ? posts.filter((post) => post.author === author)
-      : posts;
-
-    res.status(200).json(filteredPosts);
+    res.status(200).json(posts);
   } catch (err) {
     console.error("Error fetching posts:", err);
     res.status(500).json({ error: "An error occurred while fetching posts" });

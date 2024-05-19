@@ -16,11 +16,8 @@ export const getFilterRoute = (category, owner) => {
 export const createNewThread = `${host}/api/thread/create-thread`;
 export const postRoute = `${host}/api/post/posts`;
 
-export const getPostsByAuthorRoute = (selectedAuthor, threadId) => {
+export const getPostsRoute = (threadId) => {
   const params = new URLSearchParams();
-  if (selectedAuthor) {
-    params.append("author", selectedAuthor);
-  }
   if (threadId) {
     params.append("threadId", threadId);
   }
@@ -30,3 +27,4 @@ export const createPostRoute = `${host}/api/post/create-post`;
 export const getAuthorsRoute = `${host}/api/post/allauthors`;
 export const createCommentRoute = `${host}/api/post/comment`;
 export const logoutRoute = `${host}/api/auth/logout`;
+export const replyCommentRoute = `${host}/api/post/reply`;
