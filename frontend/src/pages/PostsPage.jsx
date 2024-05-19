@@ -8,6 +8,7 @@ import {
   createPostRoute,
   replyCommentRoute,
 } from "../utils/ApiRoutes";
+import PostItem from "../components/PostItem";
 import "../css/PostPage.css";
 
 export default function PostPage() {
@@ -22,35 +23,26 @@ export default function PostPage() {
   const [selectedAuthorId, setSelectedAuthorId] = useState("");
   const [showReplyForm, setShowReplyForm] = useState({});
   const [replyText, setReplyText] = useState({});
+  const [replyTextForPost, setReplyTextForPost] = useState({});
   const [isReplying, setIsReplying] = useState({});
+  const [user, setUser] = useState(null);
 
   const handleSortOrderChange = (event) => {
     setSortOrder(event.target.value);
   };
 
   const handleToggleReplyForm = (commentId) => {
-    setShowReplyForm((prev) => ({ ...prev, [commentId]: !prev[commentId] }));
+    setShowReplyForm((prev) => ({
+      ...prev,
+      [commentId]: !prev[commentId],
+    }));
   };
 
-  const handleReplyTextChange = (commentId, value) => {
-    setReplyText((prev) => ({ ...prev, [commentId]: value }));
-  };
-
-  const handleCreateReply = async (commentId) => {
-    try {
-      const response = await axios.post(
-        replyCommentRoute,
-        {
-          content: replyText[commentId],
-          commentId: commentId,
-        },
-        { withCredentials: true }
-      );
-      setReplyText((prev) => ({ ...prev, [commentId]: "" }));
-      fetchPosts();
-    } catch (err) {
-      console.log("Error: ", err);
-    }
+  const handleReplyClick = (postId) => {
+    setIsReplying((prev) => ({
+      ...prev,
+      [postId]: !prev[postId],
+    }));
   };
 
   const [formData, setFormData] = useState({
@@ -61,7 +53,7 @@ export default function PostPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(createPostRoute, formData, {
+      await axios.post(createPostRoute, formData, {
         withCredentials: true,
       });
       fetchPosts();
@@ -70,13 +62,52 @@ export default function PostPage() {
     }
   };
 
-  const handleChange = (key, value) => {
-    setFormData({ ...formData, [key]: value });
+  const handleCreateReply = async (commentId, postId) => {
+    try {
+      await axios.post(
+        replyCommentRoute,
+        {
+          content: replyText[commentId],
+          commentId: commentId,
+          postId: postId,
+        },
+        { withCredentials: true }
+      );
+      setReplyText((prev) => ({ ...prev, [commentId]: "" }));
+      fetchPosts();
+    } catch (err) {
+      console.log("Error: ", err);
+    }
+  };
+
+  const handleReplyForPost = async (postId) => {
+    try {
+      await axios.post(
+        createCommentRoute,
+        {
+          content: replyTextForPost[postId],
+          postId: postId,
+        },
+        { withCredentials: true }
+      );
+      setReplyTextForPost((prev) => ({ ...prev, [postId]: "" })); // Resetting the text area after submission
+      fetchPosts();
+    } catch (err) {
+      console.log("Error: ", err);
+    }
+  };
+
+  const handleReplyTextChange = (commentId, text) => {
+    setReplyText((prev) => ({
+      ...prev,
+      [commentId]: text,
+    }));
   };
 
   useEffect(() => {
     fetchPosts();
     fetchAuthors();
+    setUser(JSON.parse(localStorage.getItem("user")).username);
   }, []);
 
   const fetchAuthors = async () => {
@@ -84,19 +115,10 @@ export default function PostPage() {
       const response = await axios.get(getAuthorsRoute, {
         withCredentials: true,
       });
-      // Set authors as an array of usernames
       setAuthors(response.data.map((author) => author.username));
     } catch (error) {
       console.error("Error fetching authors:", error);
     }
-  };
-
-  const handleReplyClick = (commentId) => {
-    // Set the state to indicate that the reply form for this comment should be visible
-    setShowReplyForm((prevShowReplyForm) => ({
-      ...prevShowReplyForm,
-      [commentId]: true,
-    }));
   };
 
   const handleAuthorChange = async (event) => {
@@ -122,7 +144,6 @@ export default function PostPage() {
       const response = await axios.get(getPostsRoute(threadId), {
         withCredentials: true,
       });
-
       setPosts(response.data);
     } catch (err) {
       console.log("Error: ", err);
@@ -167,6 +188,8 @@ export default function PostPage() {
   };
 
   const filteredPosts = filterPosts();
+
+  console.log(filteredPosts[0]?.comments[0]?.replies[0]?.content);
 
   return (
     <div className="container mt-4">
@@ -223,10 +246,11 @@ export default function PostPage() {
               className="form-control"
               id="newThreadTitle"
               value={formData.content}
-              onChange={(e) => handleChange("content", e.target.value)}
+              onChange={(e) =>
+                setFormData({ ...formData, content: e.target.value })
+              }
             />
           </div>
-
           <button className="btn btn-primary mb-3" onClick={handleSubmit}>
             Save
           </button>
@@ -250,8 +274,8 @@ export default function PostPage() {
               <div className="row">
                 <div className="col-md-12">
                   <h3 className="text-center mb-5">Posts</h3>
-                  {filteredPosts.map((post, index) => (
-                    <div className="row" key={index}>
+                  {filteredPosts.map((post) => (
+                    <div className="row" key={post._id}>
                       <div className="col-md-12">
                         <div className="media">
                           <div className="media-body">
@@ -261,57 +285,118 @@ export default function PostPage() {
                               </div>
                               <div className="col-4">
                                 <div className="pull-right reply">
-                                  <button
-                                    onClick={() => handleReplyClick(post._id)}
-                                  >
-                                    Reply
-                                  </button>
+                                  {isReplying[post._id] ? (
+                                    <div>
+                                      <textarea
+                                        placeholder="Type your reply here..."
+                                        value={replyTextForPost[post._id] || ""}
+                                        onChange={(e) =>
+                                          setReplyTextForPost((prev) => ({
+                                            ...prev,
+                                            [post._id]: e.target.value,
+                                          }))
+                                        }
+                                      ></textarea>
+                                      <button
+                                        onClick={() =>
+                                          handleReplyForPost(post._id)
+                                        }
+                                      >
+                                        Submit
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleReplyClick(post._id)}
+                                    >
+                                      reply
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                             </div>
                             <p>{post.content}</p>
+
                             {post.comments.map((comment) => (
-                              <div className="media mt-3" key={comment.id}>
+                              <div
+                                className="media mt-3 mb-5 ml-5"
+                                key={comment._id}
+                              >
+                                <div
+                                  className="vr"
+                                  style={{ height: "35px" }}
+                                ></div>
                                 <div className="media-body">
                                   <div className="row">
                                     <div className="col-12 d-flex">
-                                      <h5>{comment.author}</h5>
+                                      <h5>{comment.author.username}</h5>
                                     </div>
                                   </div>
                                   <p>{comment.content}</p>
                                   <button
                                     onClick={() =>
-                                      handleToggleReplyForm(comment.id)
+                                      handleToggleReplyForm(comment._id)
                                     }
                                   >
                                     Reply
                                   </button>
-                                  {showReplyForm[comment.id] && (
+                                  {showReplyForm[comment._id] && (
                                     <div>
                                       <textarea
-                                        value={replyText[comment.id] || ""}
+                                        value={replyText[comment._id] || ""}
                                         onChange={(e) =>
                                           handleReplyTextChange(
-                                            comment.id,
+                                            comment._id,
                                             e.target.value
                                           )
                                         }
                                       />
                                       <button
                                         onClick={() =>
-                                          handleCreateReply(comment.id)
+                                          handleCreateReply(
+                                            comment._id,
+                                            post._id
+                                          )
                                         }
                                       >
                                         Submit
                                       </button>
                                     </div>
                                   )}
+
+                                  {comment.replies &&
+                                    comment.replies.map((reply) => (
+                                      <div
+                                        className="media mt-3 mb-5 ml-5"
+                                        key={reply._id}
+                                        style={{
+                                          marginLeft: "20px",
+                                        }}
+                                      >
+                                        <div
+                                          className="vr"
+                                          style={{
+                                            height: "35px",
+                                          }}
+                                        ></div>
+
+                                        <div className="media-body">
+                                          <div className="row">
+                                            <div className="col-12 d-flex">
+                                              <h5>{user}</h5>
+                                            </div>
+                                          </div>
+                                          <p>{reply.content}</p>
+                                        </div>
+                                      </div>
+                                    ))}
                                 </div>
                               </div>
                             ))}
                           </div>
                         </div>
                       </div>
+                      <hr className="hr" />
                     </div>
                   ))}
                 </div>

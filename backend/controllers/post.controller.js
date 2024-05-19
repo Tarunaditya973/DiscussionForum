@@ -1,4 +1,4 @@
-const Post = require("../models/post.model");
+const { Post, Comment } = require("../models/post.model");
 const Thread = require("../models/thread.model");
 const User = require("../models/user.model");
 const createPost = async (req, res) => {
@@ -68,10 +68,13 @@ const commentOnPost = async (req, res) => {
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
-    const comment = {
+    const comment = new Comment({
       content,
       author,
-    };
+    });
+
+    await comment.save();
+
     post.comments.push(comment);
     await post.save();
     res.status(201).json(post);
@@ -83,10 +86,17 @@ const commentOnPost = async (req, res) => {
 
 const replyComment = async (req, res) => {
   try {
-    const { content, authorId, commentId } = req.body;
-    const parentComment = await Comment.findById(commentId);
+    const { content, authorId, commentId, postId } = req.body;
 
-    if (!parentComment) {
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    const parentCommentIndex = post.comments.findIndex(
+      (comment) => comment._id.toString() === commentId
+    );
+    if (parentCommentIndex === -1) {
       return res.status(404).json({ error: "Parent comment not found" });
     }
 
@@ -96,9 +106,9 @@ const replyComment = async (req, res) => {
       createdAt: Date.now(),
     });
 
-    parentComment.replies.push(newReply);
+    post.comments[parentCommentIndex].replies.push(newReply);
 
-    await parentComment.save();
+    await post.save();
 
     res.status(201).json({ message: "Nested comment added successfully" });
   } catch (error) {
@@ -121,11 +131,22 @@ const fetchPosts = async (req, res) => {
   try {
     const { threadId } = req.query;
 
-    // Find posts by threadId
-    const posts = await Post.find({ thread: threadId }).populate(
-      "author",
-      "username"
-    );
+    const posts = await Post.find({ thread: threadId })
+      .populate("author", "username")
+      .populate({
+        path: "comments",
+        populate: {
+          path: "author",
+          select: "username",
+        },
+      })
+      .populate({
+        path: "comments.replies",
+        populate: {
+          path: "author",
+          select: "username",
+        },
+      });
 
     res.status(200).json(posts);
   } catch (err) {
