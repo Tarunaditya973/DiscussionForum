@@ -98,4 +98,4 @@ All the design decisions for users and threads are straightforward. Particularly
 
 ## 📹 Video Demo
 
-[Watch the video demonstration of the project](https://myportfolio-pi-plum.vercel.app/)
+[Watch the video demonstration of the project](https://drive.google.com/file/d/1kEv4d2Yqn8OCabNSq32a3o6kk7tOueEl/view?usp=drive_link)
