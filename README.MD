@@ -13,6 +13,8 @@
 
 ## 📹 Video at the end! ⬇️
 
+#### Note: `Tried deploying in vercel, but apparently vercel only allows serverless functions`
+
 ## Built with
 
 This project was built using these technologies.
