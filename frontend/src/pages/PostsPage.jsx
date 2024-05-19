@@ -10,6 +10,7 @@ import {
 } from "../utils/ApiRoutes";
 import PostItem from "../components/PostItem";
 import "../css/PostPage.css";
+import { useNavigate } from "react-router-dom";
 
 export default function PostPage() {
   const location = useLocation();
@@ -26,6 +27,7 @@ export default function PostPage() {
   const [replyTextForPost, setReplyTextForPost] = useState({});
   const [isReplying, setIsReplying] = useState({});
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   const handleSortOrderChange = (event) => {
     setSortOrder(event.target.value);
@@ -107,6 +109,9 @@ export default function PostPage() {
   useEffect(() => {
     fetchPosts();
     fetchAuthors();
+    if (!localStorage.getItem("user")) {
+      navigate("/login");
+    }
     setUser(JSON.parse(localStorage.getItem("user")).username);
   }, []);
 
@@ -188,8 +193,6 @@ export default function PostPage() {
   };
 
   const filteredPosts = filterPosts();
-
-  console.log(filteredPosts[0]?.comments[0]?.replies[0]?.content);
 
   return (
     <div className="container mt-4">

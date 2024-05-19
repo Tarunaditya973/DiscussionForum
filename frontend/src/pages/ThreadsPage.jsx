@@ -149,7 +149,6 @@ export default function ThreadPage() {
   const handleLogout = () => {
     localStorage.removeItem("user");
     const response = axios.post(logoutRoute);
-    console.log("response", response);
     navigate("/login");
   };
 

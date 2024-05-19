@@ -42,7 +42,7 @@ export default function Login() {
           withCredentials: true, // Include credentials
         }
       );
-      console.log("response", response);
+
       if (!response.data.status) {
         toast.error(response.data.message, toastOptions);
       } else {

@@ -4,7 +4,7 @@ import Login from "../pages/Login";
 import SignUp from "../pages/SignUp"; // Ensure this matches your file name
 import ThreadsPage from "../pages/ThreadsPage";
 import PostPage from "../pages/PostsPage";
-
+import App from "../App";
 export const routes = [
   {
     path: "/login",
@@ -29,6 +29,12 @@ export const routes = [
     element: <PostPage />,
     title: "Posts",
     id: "Posts",
+  },
+  {
+    path: "/",
+    element: <App />,
+    title: "App",
+    id: "App",
   },
 ];
 
