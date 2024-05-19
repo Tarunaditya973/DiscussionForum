@@ -29,6 +29,11 @@ export default function PostPage() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
+
   const handleSortOrderChange = (event) => {
     setSortOrder(event.target.value);
   };
@@ -75,7 +80,8 @@ export default function PostPage() {
         },
         { withCredentials: true }
       );
-      setReplyText((prev) => ({ ...prev, [commentId]: "" }));
+      setReplyText((prev) => ({ ...prev, [commentId]: "" })); // Resetting the textarea after submission
+      setShowReplyForm((prev) => ({ ...prev, [commentId]: false }));
       fetchPosts();
     } catch (err) {
       console.log("Error: ", err);
@@ -93,6 +99,7 @@ export default function PostPage() {
         { withCredentials: true }
       );
       setReplyTextForPost((prev) => ({ ...prev, [postId]: "" })); // Resetting the text area after submission
+      setIsReplying((prev) => ({ ...prev, [postId]: false })); // Resetting the text area after submission
       fetchPosts();
     } catch (err) {
       console.log("Error: ", err);
@@ -197,6 +204,13 @@ export default function PostPage() {
   return (
     <div className="container mt-4">
       <h1>Posts</h1>
+      <div className="d-flex justify-content-end">
+        {" "}
+        {/* Added container for the logout button */}
+        <button onClick={handleLogout} className="btn btn-danger">
+          Logout
+        </button>
+      </div>
       <div className="mb-3">
         <label htmlFor="authorDropdown" className="form-label">
           Filter by Author:
@@ -233,11 +247,12 @@ export default function PostPage() {
         </select>
       </div>
       <button
-        className="btn btn-primary mb-3"
+        className="btn btn-success mb-3"
         onClick={handleToggleFormVisibility}
       >
         {isFormVisible ? "Hide Post Form" : "Show Post Form"}
       </button>
+
       {isFormVisible && (
         <div className="mb-3 p-3 border rounded">
           <div className="mb-3">
@@ -310,9 +325,10 @@ export default function PostPage() {
                                     </div>
                                   ) : (
                                     <button
+                                      className="btn btn-primary"
                                       onClick={() => handleReplyClick(post._id)}
                                     >
-                                      reply
+                                      Reply
                                     </button>
                                   )}
                                 </div>
@@ -337,6 +353,7 @@ export default function PostPage() {
                                   </div>
                                   <p>{comment.content}</p>
                                   <button
+                                    className="btn btn-primary"
                                     onClick={() =>
                                       handleToggleReplyForm(comment._id)
                                     }
