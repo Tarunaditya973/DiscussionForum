@@ -73,6 +73,7 @@ All the design decisions for users and threads are straightforward. Particularly
 
 - **Login**: When a user logs in, we generate a JWT token and return it in the cookies to the user.
 - **Logout**: The JWT token is invalidated or cleared from the cookies.
+- **Middlware**: To hash the password before the saving the user
 - **Protected Routes**: For every subsequent request, the client sends the token with it to authenticate itself for all the protected routes. `Middleware`
 
 ### Threads
