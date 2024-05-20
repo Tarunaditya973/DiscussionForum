@@ -94,9 +94,8 @@ All the design decisions for users and threads are straightforward. Particularly
 
 ## Further Development that can be made
 
-- Implement user roles and permissions.
 - Enhance the UI for better user experience.
-- Add real-time updates with WebSockets.
+- Media in posts
 
 ## 📹 Video Demo
 
