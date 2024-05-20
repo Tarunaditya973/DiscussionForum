@@ -17,19 +17,18 @@ const signup = async (req, res, next) => {
         .status(400)
         .json({ message: "Username already taken", status: false });
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
+
     const newUser = new User({
       username,
       email,
-      password: hashedPassword, // Store hashed password
+      password,
     });
     await newUser.save();
     const token = generateToken(newUser);
     res.cookie("token", token, {
-      httpOnly: true, // Only accessible by
+      httpOnly: true,
     });
 
-    delete newUser.password;
     return res.status(201).json({
       message: "User created successfully",
       status: true,
