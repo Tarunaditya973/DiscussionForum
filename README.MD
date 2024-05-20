@@ -13,7 +13,7 @@
 
 ## 📹 Video at the end! ⬇️
 
-### Note: `Tried deploying in vercel, but apparently vercel only allows serverless functions, Please do check the video`
+### Note: `Trying to deploy in vercel. Not environment issues but other vercel issues, Please do check the video`
 
 ## Built with
 
