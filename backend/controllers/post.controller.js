@@ -4,12 +4,15 @@ const User = require("../models/user.model");
 const createPost = async (req, res) => {
   try {
     const userId = req.user.user._id;
-    const { content, threadId } = req.body;
+    const { content, threadId, base64File } = req.body;
     console.log(req.body);
+    const media = base64File ? [{ type: "image", url: base64File }] : [];
+
     const newPost = new Post({
       content: content,
       author: userId,
       thread: threadId,
+      media: media,
     });
     const savedPost = await newPost.save();
     res
@@ -23,26 +26,26 @@ const createPost = async (req, res) => {
 
 const deletePost = async (req, res) => {
   try {
-    const { postid } = req.query;
+    const { postid } = req.body;
     const userid = req.user.user._id;
     if (!postid) {
-      return res.status(400).json({ error: "Missing post ID" });
+      return res.status(400).json({ message: "Missing post ID" });
     }
 
     const post = await Post.findById(postid);
     if (!post) {
-      return res.status(404).json({ error: "Post not found" });
+      return res.status(404).json({ message: "Post not found" });
     }
 
     const thread = await Thread.findOne({ posts: postid });
     if (!thread) {
-      return res.status(404).json({ error: "Thread not found" });
+      return res.status(404).json({ message: "Thread not found" });
     }
 
     if (!thread.owner.equals(userid)) {
       return res
         .status(403)
-        .json({ error: "Not authorized to delete this post" });
+        .json({ message: "Not authorized to delete this post" });
     }
     thread.posts.pull(postid);
     await thread.save();

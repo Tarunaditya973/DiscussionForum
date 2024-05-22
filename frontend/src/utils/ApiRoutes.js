@@ -28,3 +28,4 @@ export const getAuthorsRoute = `${host}/api/post/allauthors`;
 export const createCommentRoute = `${host}/api/post/comment`;
 export const logoutRoute = `${host}/api/auth/logout`;
 export const replyCommentRoute = `${host}/api/post/reply`;
+export const deletePostRoute = `${host}/api/post/delete-post`;

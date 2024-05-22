@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   getPostsRoute,
   getAuthorsRoute,
@@ -9,8 +9,8 @@ import {
   replyCommentRoute,
 } from "../utils/ApiRoutes";
 import PostItem from "../components/PostItem";
+import FileUpload from "../components/FileUpload";
 import "../css/PostPage.css";
-import { useNavigate } from "react-router-dom";
 
 export default function PostPage() {
   const location = useLocation();
@@ -27,6 +27,11 @@ export default function PostPage() {
   const [replyTextForPost, setReplyTextForPost] = useState({});
   const [isReplying, setIsReplying] = useState({});
   const [user, setUser] = useState(null);
+  const [formData, setFormData] = useState({
+    content: "",
+    threadId: threadId,
+    base64File: "",
+  });
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -52,16 +57,18 @@ export default function PostPage() {
     }));
   };
 
-  const [formData, setFormData] = useState({
-    content: "",
-    threadId: threadId,
-  });
+  const handleFileSelect = (base64File) => {
+    setFormData({ ...formData, base64File });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await axios.post(createPostRoute, formData, {
         withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
       fetchPosts();
     } catch (err) {
@@ -78,9 +85,14 @@ export default function PostPage() {
           commentId: commentId,
           postId: postId,
         },
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
-      setReplyText((prev) => ({ ...prev, [commentId]: "" })); // Resetting the textarea after submission
+      setReplyText((prev) => ({ ...prev, [commentId]: "" }));
       setShowReplyForm((prev) => ({ ...prev, [commentId]: false }));
       fetchPosts();
     } catch (err) {
@@ -96,10 +108,15 @@ export default function PostPage() {
           content: replyTextForPost[postId],
           postId: postId,
         },
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
-      setReplyTextForPost((prev) => ({ ...prev, [postId]: "" })); // Resetting the text area after submission
-      setIsReplying((prev) => ({ ...prev, [postId]: false })); // Resetting the text area after submission
+      setReplyTextForPost((prev) => ({ ...prev, [postId]: "" }));
+      setIsReplying((prev) => ({ ...prev, [postId]: false }));
       fetchPosts();
     } catch (err) {
       console.log("Error: ", err);
@@ -126,6 +143,9 @@ export default function PostPage() {
     try {
       const response = await axios.get(getAuthorsRoute, {
         withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
       setAuthors(response.data.map((author) => author.username));
     } catch (error) {
@@ -155,8 +175,12 @@ export default function PostPage() {
     try {
       const response = await axios.get(getPostsRoute(threadId), {
         withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
       setPosts(response.data);
+      console.log(response.data);
     } catch (err) {
       console.log("Error: ", err);
     } finally {
@@ -230,44 +254,45 @@ export default function PostPage() {
             ))}
         </select>
       </div>
+
       <div className="mb-3">
-        <label htmlFor="sortOrderDropdown" className="form-label">
-          Sort by:
+        <label htmlFor="sortOrder" className="form-label">
+          Sort By:
         </label>
         <select
-          id="sortOrderDropdown"
+          id="sortOrder"
           className="form-select"
           value={sortOrder}
           onChange={handleSortOrderChange}
         >
-          <option value="">Default</option>
+          <option value="">None</option>
           <option value="title">Title</option>
           <option value="date-asc">Date (Ascending)</option>
           <option value="date-desc">Date (Descending)</option>
         </select>
       </div>
+
       <button
-        className="btn btn-success mb-3"
+        className="btn btn-primary mb-3"
         onClick={handleToggleFormVisibility}
       >
-        {isFormVisible ? "Hide Post Form" : "Show Post Form"}
+        Create New Post
       </button>
 
       {isFormVisible && (
-        <div className="mb-3 p-3 border rounded">
+        <div>
           <div className="mb-3">
-            <label htmlFor="newThreadTitle" className="form-label">
-              Content:
-            </label>
-            <input
-              type="text"
+            <textarea
               className="form-control"
-              id="newThreadTitle"
+              placeholder="Type your content here..."
               value={formData.content}
               onChange={(e) =>
                 setFormData({ ...formData, content: e.target.value })
               }
-            />
+            ></textarea>
+          </div>
+          <div className="mb-3">
+            <FileUpload onFileSelect={handleFileSelect} />
           </div>
           <button className="btn btn-primary mb-3" onClick={handleSubmit}>
             Save
@@ -299,8 +324,19 @@ export default function PostPage() {
                           <div className="media-body">
                             <div className="row">
                               <div className="col-8 d-flex">
-                                <h5>{post.author.username}</h5>
+                                <h5>{post.author?.username}</h5>
                               </div>
+                              {post.media.length > 0 && (
+                                <div className="col-8 d-flex">
+                                  <img
+                                    src={post?.media[0].url}
+                                    style={{
+                                      width: "300px",
+                                      height: "300px",
+                                    }}
+                                  />
+                                </div>
+                              )}
                               <div className="col-4">
                                 <div className="pull-right reply">
                                   {isReplying[post._id] ? (
@@ -334,7 +370,7 @@ export default function PostPage() {
                                 </div>
                               </div>
                             </div>
-                            <p>{post.content}</p>
+                            <p className="mt-1">{post.content}</p>
 
                             {post.comments.map((comment) => (
                               <div
@@ -348,7 +384,7 @@ export default function PostPage() {
                                 <div className="media-body">
                                   <div className="row">
                                     <div className="col-12 d-flex">
-                                      <h5>{comment.author.username}</h5>
+                                      <h5>{comment.author?.username}</h5>
                                     </div>
                                   </div>
                                   <p>{comment.content}</p>
@@ -403,7 +439,7 @@ export default function PostPage() {
                                         <div className="media-body">
                                           <div className="row">
                                             <div className="col-12 d-flex">
-                                              <h5>{user}</h5>
+                                              <h5>{reply.author?.username}</h5>
                                             </div>
                                           </div>
                                           <p>{reply.content}</p>
