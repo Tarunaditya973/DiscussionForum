@@ -86,6 +86,7 @@ All the design decisions for users and threads are straightforward. Particularly
 
 - **Create Post**: API to create a new post in a thread.
 - **Get Posts**: API to fetch all posts in a thread.
+- For each post we have an array of media schema, where users can upload images and videos
 
 ### Comments
 
