@@ -15,6 +15,8 @@
 
 ### Note: `Trying to deploy in vercel. Not environment issues but other vercel issues, Please do check the video`
 
+**Update**:`Included media to posts also`
+
 ## Built with
 
 This project was built using these technologies.
