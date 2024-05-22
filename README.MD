@@ -96,7 +96,6 @@ All the design decisions for users and threads are straightforward. Particularly
 ## Further Development that can be made
 
 - Enhance the UI for better user experience.
-- Media in posts
 
 ## 📹 Video Demo
 
